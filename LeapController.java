@@ -36,14 +36,34 @@ class LeapListener extends Listener {
 	
 	public void onFrame(Controller controller) {
 		Frame frame = controller.frame();
+		HandList hands = frame.hands();
+		Hand firstHand = frame.hand(0);
+		FingerList fingers = frame.fingers();
+		Vector start = firstHand.palmPosition();//starting palm position
+		
+		
+		for(Hand hand : frame.hands())
+		{
+			
+			if(firstHand.isRight())
+			{
+				for(Finger finger : frame.fingers())
+				{
+					Vector newPosition = firstHand.palmPosition();//new palm position
+					if((finger.isExtended()) && (start. < newPosition)))
+					
+				}
+					
+			}
+		}
 		/**System.out.println("frame id: " + frame.id()
-							+ " timestamp: " + frame.timestamp()
+							+ " time stamp: " + frame.timestamp()
 							+ " number of hands: " + frame.hands().count()
 							+ " number of fingers: " + frame.fingers().count()
 							+ " tools: " + frame.tools().count()
-							+ " number of gestures: " + frame.gestures().count());**/
+							+ " number of gestures: " + frame.gestures().count());
 		
-		/**for(Hand hand: frame.hands()) {
+		for(Hand hand: frame.hands()) {
 			
 			//find hand data
 			String handType = hand.isLeft() ? "Left Hand" : "Right Hand";
@@ -59,7 +79,7 @@ class LeapListener extends Listener {
 								+ " Yaw: " + Math.toDegrees(direction.yaw()));
 		
 		}**/
-		
+		/**
 		//finger data
 		for(Finger finger: frame.fingers()) {
 			System.out.println("Finger Type: " + finger.type()
@@ -77,6 +97,47 @@ class LeapListener extends Listener {
 			}
 			
 		}
+		
+		//Circle gesture data
+		GestureList gestures = frame.gestures();
+		
+		for(int i=0;i<gestures.count();i++)
+		{
+			Gesture gesture = gestures.get(i);
+			
+			switch(gesture.type()) 
+			{
+			case TYPE_CIRCLE:
+				CircleGesture circle = new CircleGesture(gesture);
+				
+				//clockwise or counter clockwise
+				String clockwiseness;
+				if(circle.pointable().direction().angleTo(circle.normal()) <= Math.PI/4)
+				{
+					clockwiseness = "clockwise";
+				} else {
+					clockwiseness = "counterclockwise";
+				}
+				
+				//swept angle
+				double sweptAngle = 0;
+				
+				if(circle.state() != State.STATE_START)
+				{
+					CircleGesture previous = new CircleGesture(controller.frame(1).gesture(circle.id()));
+					sweptAngle = (circle.progress() - previous.progress()) * 2 * Math.PI;
+				}
+				
+				//print out relevant data
+				System.out.println("Circle ID: " + circle.id()
+									+ " State: " + circle.state()
+									+ " Progress: " + circle.progress()
+									+ " Radius: " + circle.radius()
+									+ " Swept Angle: " + Math.toDegrees(sweptAngle)
+									+ " " + clockwiseness);
+				break;
+			}
+		}**/
 		
 		
 	}
