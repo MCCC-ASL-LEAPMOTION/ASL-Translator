@@ -2,6 +2,7 @@ import com.leapmotion.leap.Gesture.State;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
@@ -11,6 +12,10 @@ import javax.swing.text.html.HTMLDocument.Iterator;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.leapmotion.leap.*;
 
 import java.util.Scanner; 
@@ -23,11 +28,12 @@ import java.util.Scanner;
  * @author joepl
  *
  */
-
-
 class LeapListener extends Listener {
 		
 	
+	/**
+	 * @param controller
+	 */
 	public void onInIt(Controller controller) 
 	{
 			
@@ -36,6 +42,10 @@ class LeapListener extends Listener {
 	}
 		
 	
+	
+	/* (non-Javadoc)
+	 * @see com.leapmotion.leap.Listener#onConnect(com.leapmotion.leap.Controller)
+	 */
 	public void onConnect(Controller controller) 
 	{
 			
@@ -53,6 +63,9 @@ class LeapListener extends Listener {
 	}
 		
 	
+	/* (non-Javadoc)
+	 * @see com.leapmotion.leap.Listener#onDisconnect(com.leapmotion.leap.Controller)
+	 */
 	public void onDisconnect(Controller controller) {
 				
 		System.out.println("Motion Sensor Disconnected");
@@ -60,6 +73,9 @@ class LeapListener extends Listener {
 	}
 		
 		
+	/* (non-Javadoc)
+	 * @see com.leapmotion.leap.Listener#onExit(com.leapmotion.leap.Controller)
+	 */
 	public void onExit(Controller controller) {
 		
 		System.out.println("Exited");
@@ -67,8 +83,12 @@ class LeapListener extends Listener {
 	}
 		
 		
+	/* (non-Javadoc)
+	 * @see com.leapmotion.leap.Listener#onFrame(com.leapmotion.leap.Controller)
+	 */
 	public void onFrame(Controller controller) {
-			
+		
+		//create Frame object for the controller to read from
 		Frame frame = controller.frame();
 		
 		//Gesture data
@@ -76,16 +96,43 @@ class LeapListener extends Listener {
 				
 		for(int i=0;i<gestures.count();i++)
 		{
-				
+			
+			//Gesture object that is equal to the gesture at the i frame
 			Gesture gesture = gestures.get(i);
+			
+			String q = "";
 					
 			switch(gesture.type()) 
 			{
 					
 				case TYPE_KEY_TAP:
+					
+					//set String q to "You" since a Screen Tap gesture was read
+					q = "This%20is%20a%20key%20tap%20gesture";
+					
+					try {
+						//translate the String q by running translateText() method with a parameter of q
+						translateText(q);
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					
 				break;
 				
 				case TYPE_SWIPE:
+					
+					//set String q to "You" since a Screen Tap gesture was read
+					q = "This%20is%20a%20swipe";
+					
+					try {
+						//translate the String q by running translateText() method with a parameter of q
+						translateText(q);
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					
 				break;
 					
 				case TYPE_INVALID:
@@ -93,18 +140,17 @@ class LeapListener extends Listener {
 					
 				case TYPE_CIRCLE:
 					
+					//Create a Circle Gesture Object
 					CircleGesture circle = new CircleGesture(gesture);
-						
-					//clockwise or counter clockwise
-					String clockwiseness;
-				
+					
+					//If the angle between the normal and the pointable object drawing the circle is less than 90 degrees, then the circle is clockwise.
 					if(circle.pointable().direction().angleTo(circle.normal()) <= Math.PI/4)
 					{
 					
-						String q = "clockwise";
+						q = "This%20circle%20is%20rotating%20clockwise";
 						
 						try {
-							System.out.println(q);
+							//translate q
 							translateText(q);
 						} catch (Exception e) {
 							// TODO Auto-generated catch block
@@ -113,34 +159,35 @@ class LeapListener extends Listener {
 						
 					} else {
 					
-						String q = "counterclockwise";
+						q = "This%20circle%20is%20rotating%20counterclockwise";
 						
 						try {
+							//translate q
 							translateText(q);
-							System.out.println(q);
 						} catch (Exception e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
 						
-					}
+					}//end else
 					
-
 				break;
 						
 						
 				case TYPE_SCREEN_TAP:
-						
+					
+					//create a screen tap gesture
 					ScreenTapGesture screenTap = new ScreenTapGesture(gesture);
 					
-					String q = "You";
+					//set String q to "You" since a Screen Tap gesture was read
+					q = "You";
 					
 					//System.out.println("YOU");
 					
 										
 				try {
+					//translate the String q by running translateText() method with a paramter of q
 					translateText(q);
-					System.out.println(q);
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -154,7 +201,11 @@ class LeapListener extends Listener {
 
 	}//end onFrame
 	
-	
+	//method that actually translate the text
+	/**
+	 * @param q
+	 * @throws Exception
+	 */
 	public static void translateText(String q) throws Exception 
 	{
 		
@@ -163,23 +214,36 @@ class LeapListener extends Listener {
 		//find the source language, or the language you want to translate to
 		Scanner scan = new Scanner(System.in);
 		System.out.println("What language would you like to translate to: ");
-		sourceLang = scan.next();
-		//System.out.println(sourceLang);
+		sourceLang = scan.nextLine();
 		scan.close();
 		
-		//URL googleTranslate = new URL("https://translation.googleapis.com/language/translate/v2?key=AIzaSyB3fYnEkoanbhGwmo9Suti1hrLmdf0Kz6o&source=" +  + "&target=" + "&q=" + q);
-		
+		//create URL to request translation using the REST method
 		URL googleTranslate = new URL("https://translation.googleapis.com/language/translate/v2?key=AIzaSyB3fYnEkoanbhGwmo9Suti1hrLmdf0Kz6o&source=en&target=" + sourceLang + "&q=" + q);
 		
+		//open the URL connection
 		URLConnection yc = googleTranslate.openConnection();
 		
+		//create a Buffered Reader Object to read the input stream
 		BufferedReader in = new BufferedReader(new InputStreamReader(yc.getInputStream()));
-		
-		String inputLine = null;
-		while ((inputLine = in.readLine()) != null) {
-            System.out.println(inputLine);
-		}
+
+		//Google Gson parser to read only 'translations' Json array
+		//parse Buffered Reader named in
+		JsonElement jelement = new JsonParser().parse(in);
+		//create Json Object and retrieve as Json object
+	    JsonObject  jobject = jelement.getAsJsonObject();
+	    //retrieve Json 'data' array
+	    jobject = jobject.getAsJsonObject("data");
+	    //retrieve Json 'translations' array
+	    JsonArray jarray = jobject.getAsJsonArray("translations");
+	    //retrieve instance at 0 as a Json Object
+	    jobject = jarray.get(0).getAsJsonObject();
+	    //set result equal to the translated text and run toString() on Object
+	    String result = jobject.get("translatedText").toString();
 	    
+	    //output result
+	    System.out.println("The translated result: " + result);
+	    
+	    //close buffered reader
 	    in.close();
 	    
 		
